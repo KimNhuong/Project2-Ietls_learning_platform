@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "22gHGLF3pxIfpmg0AGoIllLhmSfm+XijNK5Z6UJc3IY=",
+  "Source": "IeltsWeb.api",
+  "BasePath": "_content/IeltsWeb.api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

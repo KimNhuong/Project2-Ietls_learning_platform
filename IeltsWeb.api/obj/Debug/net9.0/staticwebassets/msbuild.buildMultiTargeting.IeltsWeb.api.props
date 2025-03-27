@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\IeltsWeb.api.props" />
+</Project>
