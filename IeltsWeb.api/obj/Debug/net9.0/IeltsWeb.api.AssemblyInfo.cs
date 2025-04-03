@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("IeltsWeb.api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f7e148c166d6c2d24b159f98d25fccfa0975eb99")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+301154e08f1c17e8cf155d5381d41533a8faa3c7")]
 [assembly: System.Reflection.AssemblyProductAttribute("IeltsWeb.api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("IeltsWeb.api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

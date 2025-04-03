@@ -11,6 +11,7 @@ public interface IUserService
     Task<User> CreateUserAsync(User user);
     Task UpdateUserAsync(User user);
     Task DeleteUserAsync(int id);
+    Task<IEnumerable<User>> SearchUsersByNameAsync(string name);
 }
 
 
@@ -38,6 +39,13 @@ public class UserService : IUserService
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
         return user;
+    }
+
+    public async Task<IEnumerable<User>> SearchUsersByNameAsync(string name)
+    {
+        return await _context.Users
+            .Where(u => u.Username.Contains(name)) // Tìm kiếm username chứa chuỗi `name`
+            .ToListAsync();
     }
 
     public async Task UpdateUserAsync(User user)
