@@ -1,1 +1,3 @@
-GET http://localhost:5067 
+GET http://localhost:5067/users
+###
+GET http://localhost:5067/users/john_doe
