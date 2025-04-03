@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace IeltsWeb.api.models;
 
@@ -15,5 +16,6 @@ public class Exam
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    [JsonIgnore]
     public ICollection<ExamResult> ExamResults { get; set; } = new List<ExamResult>();
 }
