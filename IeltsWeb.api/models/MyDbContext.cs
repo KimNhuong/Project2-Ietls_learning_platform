@@ -15,7 +15,8 @@ public class MyDbContext : Microsoft.EntityFrameworkCore.DbContext
     public DbSet<SkillResult> SkillResults { get; set; }
     public DbSet<ProgressTracking> ProgressTrackings { get; set; }
     public DbSet<DeepSeekRequest> DeepSeekRequests { get; set; }
-    
+    public DbSet<Question> Questions { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
     modelBuilder.Entity<User>()
@@ -29,5 +30,11 @@ public class MyDbContext : Microsoft.EntityFrameworkCore.DbContext
         new Role { RoleId = 1, RoleName = "Admin" },
         new Role { RoleId = 2, RoleName = "User" }
     );
+
+    // Quan hệ Exam - Question
+    modelBuilder.Entity<Question>()
+        .HasOne(q => q.Exam)
+        .WithMany(e => e.Questions)
+        .HasForeignKey(q => q.ExamId);
 }
 }

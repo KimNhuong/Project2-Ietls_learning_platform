@@ -15,6 +15,7 @@
       "dotnetRunMessages": true,
       "launchBrowser": true,
       "applicationUrl": "https://localhost:7070;http://localhost:5067",
+      "sslPort": 5067,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

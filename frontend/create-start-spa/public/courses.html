@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Courses</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 0;
+        padding: 2rem;
+        background: url("/assets/CoursesBackground.jpg") center/cover no-repeat;
+      }
+      .search-section {
+        background-color: rgba(255, 255, 255, 0.95);
+        padding: 2rem;
+        width: 75%;
+        margin: auto;
+        border-radius: 1rem;
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+      .search-bar {
+        width: 80%;
+        padding: 0.75rem;
+        font-size: 1.1rem;
+        border: 1px solid #ccc;
+        border-radius: 0.5rem;
+        margin-top: 1rem;
+      }
+      .courses-container {
+        display: flex;
+        justify-content: space-evenly;
+        gap: 2rem;
+        flex-wrap: wrap;
+      }
+      .course-card {
+        background-color: white;
+        border-radius: 1rem;
+        padding: 1rem;
+        width: 40%;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+      .course-card img {
+        width: 100%;
+        border-radius: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="search-section">
+      <h2>Look for any courses</h2>
+      <input class="search-bar" type="text" placeholder="Search courses..." />
+    </div>
+
+    <div class="courses-container">
+      <div class="course-card">
+        <img src="/assets/sample-course.jpg" alt="Course 1" />
+        <h3>IELTS Reading Skills</h3>
+        <p>Comprehension, Skimming, Scanning & Practice Tests</p>
+      </div>
+      <div class="course-card">
+        <img src="/assets/sample-course2.jpg" alt="Course 2" />
+        <h3>IELTS Speaking Boost</h3>
+        <p>Strategies, examples, mock interviews</p>
+      </div>
+    </div>
+  </body>
+</html>

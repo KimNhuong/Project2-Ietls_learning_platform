@@ -100,10 +100,28 @@ namespace IeltsWeb.api.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<int>("Ratings")
+                        .HasColumnType("int");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("varchar(200)");
+
+                    b.Property<string>("VideoUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
 
                     b.HasKey("ExamId");
 
@@ -121,6 +139,9 @@ namespace IeltsWeb.api.Migrations
                     b.Property<int>("ExamId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("QuestionId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Score")
                         .HasColumnType("int");
 
@@ -133,6 +154,8 @@ namespace IeltsWeb.api.Migrations
                     b.HasKey("ResultId");
 
                     b.HasIndex("ExamId");
+
+                    b.HasIndex("QuestionId");
 
                     b.HasIndex("UserId");
 
@@ -166,6 +189,49 @@ namespace IeltsWeb.api.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("ProgressTrackings");
+                });
+
+            modelBuilder.Entity("IeltsWeb.api.models.Question", b =>
+                {
+                    b.Property<int>("QuestionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("QuestionId"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CorrectAnswer")
+                        .IsRequired()
+                        .HasMaxLength(1)
+                        .HasColumnType("varchar(1)");
+
+                    b.Property<int>("ExamId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OptionA")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("OptionB")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("OptionC")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("OptionD")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("QuestionId");
+
+                    b.HasIndex("ExamId");
+
+                    b.ToTable("Questions");
                 });
 
             modelBuilder.Entity("IeltsWeb.api.models.SkillExercise", b =>
@@ -285,6 +351,10 @@ namespace IeltsWeb.api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("IeltsWeb.api.models.Question", null)
+                        .WithMany("ExamResults")
+                        .HasForeignKey("QuestionId");
+
                     b.HasOne("IeltsWeb.api.models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -305,6 +375,17 @@ namespace IeltsWeb.api.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("IeltsWeb.api.models.Question", b =>
+                {
+                    b.HasOne("IeltsWeb.api.models.Exam", "Exam")
+                        .WithMany("Questions")
+                        .HasForeignKey("ExamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Exam");
                 });
 
             modelBuilder.Entity("IeltsWeb.api.models.SkillResult", b =>
@@ -343,6 +424,13 @@ namespace IeltsWeb.api.Migrations
                 });
 
             modelBuilder.Entity("IeltsWeb.api.models.Exam", b =>
+                {
+                    b.Navigation("ExamResults");
+
+                    b.Navigation("Questions");
+                });
+
+            modelBuilder.Entity("IeltsWeb.api.models.Question", b =>
                 {
                     b.Navigation("ExamResults");
                 });
