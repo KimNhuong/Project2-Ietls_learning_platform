@@ -21,9 +21,9 @@ builder.Services.AddDbContext<MyDbContext>(options =>
 
 // Register services
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IExamService, ExamService>();
-// Đăng ký service tiến trình
-builder.Services.AddScoped<IProgressTrackingService, ProgressTrackingService>();
+// Comment hoặc xóa các dòng sau nếu chưa có các service này
+// builder.Services.AddScoped<IExamService, ExamService>();
+// builder.Services.AddScoped<IProgressTrackingService, ProgressTrackingService>();
 // Nếu có QuestionServiced<IProgressTrackingService, ProgressTrackingService>();
 // builder.Services.AddScoped<IQuestionService, QuestionService>();
 // builder.Services.AddScoped<IQuestionService, QuestionService>();
@@ -59,6 +59,7 @@ builder.Services.AddCors(options =>
                   .AllowAnyMethod();
         });
 });
+builder.Services.AddSingleton<DeepSeekService>();
 
 var app = builder.Build();
 
@@ -74,7 +75,7 @@ app.UseHttpsRedirection();
 app.UseCors("AllowFrontend"); // Đảm bảo dòng này nằm TRƯỚC UseAuthentication và UseAuthorization
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseMiddleware<IeltsWeb.api.Middlewares.ProgressTrackingMiddleware>();
+// app.UseMiddleware<IeltsWeb.api.Middlewares.ProgressTrackingMiddleware>();
 app.MapControllers();
 
 app.Run();

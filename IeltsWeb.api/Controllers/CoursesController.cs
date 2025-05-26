@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using IeltsWeb.api.Services;
+using System.Threading.Tasks;
 
 namespace IeltsWeb.api.Controllers;
 
@@ -6,6 +8,12 @@ namespace IeltsWeb.api.Controllers;
 [Route("api/[controller]")]
 public class CoursesController : ControllerBase
 {
+    private readonly DeepSeekService _deepSeekService;
+    public CoursesController(DeepSeekService deepSeekService)
+    {
+        _deepSeekService = deepSeekService;
+    }
+
     // GET: /api/courses
     [HttpGet]
     public IActionResult GetCourses()
@@ -52,5 +60,26 @@ public class CoursesController : ControllerBase
     {
         // TODO: Lấy chi tiết câu hỏi trắc nghiệm
         return Ok(new { QuestionId = questionId, Content = "What is ...?", Options = new[] { "A", "B", "C" } });
+    }
+
+    // Ví dụ endpoint sử dụng DeepSeek AI
+    [HttpPost("deepseek-demo")]
+    public async Task<IActionResult> DeepSeekDemo([FromBody] string prompt)
+    {
+        try
+        {
+            var result = await _deepSeekService.CallDeepSeekAsync(prompt);
+            return Ok(result);
+        }
+        catch (HttpRequestException ex)
+        {
+            // Log the exception if needed
+            return StatusCode(502, $"DeepSeek service error: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            // Log the exception if needed
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
     }
 }

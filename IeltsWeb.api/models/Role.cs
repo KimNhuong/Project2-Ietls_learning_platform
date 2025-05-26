@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using IeltsWeb.api.models;
 
@@ -12,5 +13,11 @@ public class Role
     [MaxLength(50)]
     public string RoleName { get; set; } = string.Empty;
 
-    public ICollection<User> Users { get; set; } = new List<User>();
+    // Navigation property
+    public ICollection<User> Users { get; set; }
+
+    public Role()
+    {
+        Users = new List<User>();
+    }
 }

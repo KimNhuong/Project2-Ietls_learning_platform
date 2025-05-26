@@ -1,35 +1,34 @@
-using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
+using System.Collections.Generic;
 
-namespace IeltsWeb.api.models;
-
-public class Question
+namespace IeltsWeb.api.models
 {
-    [Key]
-    public int QuestionId { get; set; }
+    public class Question
+    {
+        public int Id { get; set; }
+        public int TestId { get; set; }
+        public string Content { get; set; }
+        public string QuestionType { get; set; }
+        public string Skill { get; set; }
+        public string MediaUrl { get; set; }
+        public int Order { get; set; }
 
-    [Required]
-    public string Content { get; set; } = string.Empty;
+        public Test Test { get; set; }
+        public ICollection<Answer> Answers { get; set; }
+        public ICollection<UserAnswer> UserAnswers { get; set; }
+        public ICollection<QuestionMedia> QuestionMedias { get; set; }
+        public ICollection<UserBookmark> UserBookmarks { get; set; }
 
-    // Đáp án A, B, C, D
-    [Required]
-    public string OptionA { get; set; } = string.Empty;
-    [Required]
-    public string OptionB { get; set; } = string.Empty;
-    [Required]
-    public string OptionC { get; set; } = string.Empty;
-    [Required]
-    public string OptionD { get; set; } = string.Empty;
-
-    [Required]
-    [MaxLength(1)]
-    public string CorrectAnswer { get; set; } = string.Empty; // "A", "B", "C", "D"
-
-    public int ExamId { get; set; }
-    [JsonIgnore]
-    public Exam Exam { get; set; } = null!;
-
-    // Tham chiếu đến các kết quả thi (nếu cần)
-    [JsonIgnore]
-    public ICollection<ExamResult> ExamResults { get; set; } = new List<ExamResult>();
+        public Question()
+        {
+            Content = string.Empty;
+            QuestionType = string.Empty;
+            Skill = string.Empty;
+            MediaUrl = string.Empty;
+            Test = null!;
+            Answers = new List<Answer>();
+            UserAnswers = new List<UserAnswer>();
+            QuestionMedias = new List<QuestionMedia>();
+            UserBookmarks = new List<UserBookmark>();
+        }
+    }
 }

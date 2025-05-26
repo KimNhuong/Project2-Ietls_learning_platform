@@ -9,8 +9,10 @@
             class="search-bar"
             type="text"
             placeholder="Hinted search text"
+            v-model="searchKeyword"
+            @keyup.enter="handleSearch"
           />
-          <button class="search-button">
+          <button class="search-button" @click="handleSearch">
             <i class="fas fa-search"></i> Find
           </button>
         </div>
@@ -54,6 +56,8 @@
               class="course-card"
               v-for="(course, index) in courses"
               :key="index"
+              @click="goToCourseDetail(course.id)"
+              style="cursor: pointer"
             >
               <img :src="course.image" :alt="course.title" />
               <div class="course-info">
@@ -78,37 +82,57 @@
 </template>
 
 <script>
+import CourseService from "@/services/CourseService";
+
 export default {
   name: "CoursesPage",
   data() {
     return {
-      courses: [
-        {
-          image: "/assets/courses1.jpg",
-          title: "The complete IELTS writing bootcamp",
-          author: "SOMEONE",
-          rating: 5,
-        },
-        {
-          image: "/assets/courses2.jpg",
-          title: "The complete IELTS reading bootcamp",
-          author: "SOMEONE",
-          rating: 4,
-        },
-        {
-          image: "/assets/courses3.jpg",
-          title: "The complete IELTS listening bootcamp",
-          author: "SOMEONE",
-          rating: 4,
-        },
-        {
-          image: "/assets/courses4.jpg",
-          title: "The complete IELTS speaking bootcamp",
-          author: "SOMEONE",
-          rating: 3,
-        },
-      ],
+      courses: [],
+      searchKeyword: "",
     };
+  },
+  async created() {
+    await this.loadCourses();
+  },
+  methods: {
+    async loadCourses() {
+      try {
+        const data = await CourseService.getCourses();
+        this.courses = data.map((item) => ({
+          id: item.id || item.examId, // đảm bảo có id
+          image: "/assets/courses1.jpg",
+          title: item.name || item.title || "No title",
+          author: item.author || "Unknown",
+          rating: item.rating || 5,
+        }));
+      } catch (err) {
+        this.courses = [];
+      }
+    },
+    async handleSearch() {
+      if (!this.searchKeyword) {
+        await this.loadCourses();
+        return;
+      }
+      try {
+        const data = await CourseService.searchCourses(this.searchKeyword);
+        this.courses = data.map((item) => ({
+          id: item.id || item.examId, // đảm bảo có id
+          image: "/assets/courses1.jpg",
+          title: item.name || item.title || "No title",
+          author: item.author || "Unknown",
+          rating: item.rating || 5,
+        }));
+      } catch (err) {
+        this.courses = [];
+      }
+    },
+    goToCourseDetail(id) {
+      if (id) {
+        this.$router.push({ name: "CourseDetail", params: { id: String(id) } });
+      }
+    },
   },
 };
 </script>

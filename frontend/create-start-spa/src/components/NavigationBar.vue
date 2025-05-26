@@ -143,7 +143,7 @@ export default {
 .navbar-brand {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #6a0dad;
+  color: #00bcd4;
 }
 
 .navbar-nav .nav-link {
@@ -153,7 +153,7 @@ export default {
 }
 
 .navbar-nav .nav-link.active {
-  color: #6a0dad;
+  color: #00bcd4;
   font-weight: bold;
 }
 

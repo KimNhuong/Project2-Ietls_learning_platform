@@ -66,9 +66,7 @@ export default {
         try {
           const token = await authService.login(this.username, this.password);
           localStorage.setItem("token", token);
-          this.$router.push("/");
-          // Sau khi chuyển về HomePage, có thể phát sự kiện hoặc reload để cập nhật giao diện
-          // window.location.reload();
+          window.location.href = "/";
         } catch (err) {
           alert(
             "Login failed: " + (err.response?.data?.message || err.message)

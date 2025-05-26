@@ -1,40 +1,35 @@
 using IeltsWeb.api.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace IeltsWeb.api.models;
-
-public class MyDbContext : Microsoft.EntityFrameworkCore.DbContext
+namespace IeltsWeb.api.models
 {
-    public MyDbContext(DbContextOptions<MyDbContext> options) : base(options) { }
-    
-    public DbSet<User> Users { get; set; }
-    public DbSet<Role> Roles { get; set; }
-    public DbSet<Exam> Exams { get; set; }
-    public DbSet<ExamResult> ExamResults { get; set; }
-    public DbSet<SkillExercise> SkillExercises { get; set; }
-    public DbSet<SkillResult> SkillResults { get; set; }
-    public DbSet<ProgressTracking> ProgressTrackings { get; set; }
-    public DbSet<DeepSeekRequest> DeepSeekRequests { get; set; }
-    public DbSet<Question> Questions { get; set; }
+    public class MyDbContext : DbContext
+    {
+        public MyDbContext(DbContextOptions<MyDbContext> options) : base(options) { }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-{
-    modelBuilder.Entity<User>()
-    .HasOne(u => u.Role) // Chỉ định User có một Role
-    .WithMany(r => r.Users) // Role có nhiều Users
-    .HasForeignKey(u => u.RoleId); // Chỉ định RoleId là khóa ngoại
+        public DbSet<User> Users { get; set; }
+        public DbSet<Course> Courses { get; set; }
+        public DbSet<Lesson> Lessons { get; set; }
+        public DbSet<Test> Tests { get; set; }
+        public DbSet<Question> Questions { get; set; }
+        public DbSet<Answer> Answers { get; set; }
+        public DbSet<UserAnswer> UserAnswers { get; set; }
+        public DbSet<UserProgress> UserProgresses { get; set; }
+        public DbSet<Media> Media { get; set; }
+        public DbSet<QuestionMedia> QuestionMedias { get; set; }
+        public DbSet<TestAttempt> TestAttempts { get; set; }
+        public DbSet<UserBookmark> UserBookmarks { get; set; }
+        public DbSet<Role> Roles { get; set; }
 
-    
-    // Seed data cho bảng Roles
-    modelBuilder.Entity<Role>().HasData(
-        new Role { RoleId = 1, RoleName = "Admin" },
-        new Role { RoleId = 2, RoleName = "User" }
-    );
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            // Composite key for QuestionMedia
+            modelBuilder.Entity<QuestionMedia>()
+                .HasKey(qm => new { qm.QuestionId, qm.MediaId });
 
-    // Quan hệ Exam - Question
-    modelBuilder.Entity<Question>()
-        .HasOne(q => q.Exam)
-        .WithMany(e => e.Questions)
-        .HasForeignKey(q => q.ExamId);
-}
+            // ...add more Fluent API config here if needed...
+
+            base.OnModelCreating(modelBuilder);
+        }
+    }
 }
