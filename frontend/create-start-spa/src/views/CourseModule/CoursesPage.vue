@@ -25,22 +25,53 @@
         <div class="filter-section">
           <h3>Ratings</h3>
           <ul class="ratings-list">
-            <li><input type="radio" name="rating" /> 5 star</li>
-            <li><input type="radio" name="rating" /> 4 stars & up</li>
-            <li><input type="radio" name="rating" /> 3 stars & up</li>
-            <li><input type="radio" name="rating" /> 2 stars & up</li>
-            <li><input type="radio" name="rating" /> 1 star & up</li>
+            <li>
+              <input type="radio" name="rating" value="5" v-model.number="selectedRating" id="rating-5" />
+              <label for="rating-5">5 star</label>
+            </li>
+            <li>
+              <input type="radio" name="rating" value="4" v-model.number="selectedRating" id="rating-4" />
+              <label for="rating-4">4 stars & up</label>
+            </li>
+            <li>
+              <input type="radio" name="rating" value="3" v-model.number="selectedRating" id="rating-3" />
+              <label for="rating-3">3 stars & up</label>
+            </li>
+            <li>
+              <input type="radio" name="rating" value="2" v-model.number="selectedRating" id="rating-2" />
+              <label for="rating-2">2 stars & up</label>
+            </li>
+            <li>
+              <input type="radio" name="rating" value="1" v-model.number="selectedRating" id="rating-1" />
+              <label for="rating-1">1 star & up</label>
+            </li>
+            <li>
+              <input type="radio" name="rating" value="0" v-model.number="selectedRating" id="rating-all" />
+              <label for="rating-all">All</label>
+            </li>
           </ul>
 
           <h3>Levels</h3>
           <ul class="levels-list">
-            <li><input type="checkbox" /> All levels</li>
-            <li><input type="checkbox" /> Beginner</li>
-            <li><input type="checkbox" /> Intermediate</li>
-            <li><input type="checkbox" /> Expert</li>
+            <li>
+              <input type="checkbox" value="B1" v-model="selectedLevels" id="level-b1" />
+              <label for="level-b1">B1</label>
+            </li>
+            <li>
+              <input type="checkbox" value="B2" v-model="selectedLevels" id="level-b2" />
+              <label for="level-b2">B2</label>
+            </li>
+            <li>
+              <input type="checkbox" value="C1" v-model="selectedLevels" id="level-c1" />
+              <label for="level-c1">C1</label>
+            </li>
+            <li>
+              <input type="checkbox" value="C2" v-model="selectedLevels" id="level-c2" />
+              <label for="level-c2">C2</label>
+            </li>
           </ul>
-          <button class="btn btn-filter">Apply</button>
-          <button class="btn btn-reset">Reset</button>
+          <button class="btn btn-filter" @click="applyFilter">Apply</button>
+          <button class="btn btn-reset" @click="resetFilter">Reset</button>
         </div>
 
         <!-- Results Section -->
@@ -50,27 +81,31 @@
               Sort by most popular <i class="fas fa-chevron-down"></i>
             </button>
           </div>
-          <h3 class="results-title">4 results</h3>
+          <h3 class="results-title">{{ courses.length }} results</h3>
           <transition-group name="card-fade" tag="div">
             <div
               class="course-card"
-              v-for="(course, index) in courses"
-              :key="index"
+              v-for="course in courses"
+              :key="course.id"
               @click="goToCourseDetail(course.id)"
               style="cursor: pointer"
             >
-              <img :src="course.image" :alt="course.title" />
+              <img :src="course.imageUrl || '/assets/courses1.jpg'" :alt="course.title" />
               <div class="course-info">
                 <h4>{{ course.title }}</h4>
-                <p>by {{ course.author }}</p>
+                <p>{{ course.description }}</p>
+                <p><strong>Level:</strong> {{ course.level }}</p>
+                <p><strong>Creator:</strong> {{ course.creator?.username || 'Unknown' }}</p>
                 <div class="rating">
                   <span
                     v-for="star in 5"
                     :key="star"
                     class="star"
-                    :class="{ filled: star <= course.rating }"
-                    >★</span
-                  >
+                    :class="{ filled: star <= Math.round(course.ratings) }"
+                  >★</span>
+                  <span style="margin-left:8px; color:#888;">
+                    ({{ course.votes || 0 }} votes)
+                  </span>
                 </div>
               </div>
             </div>
@@ -83,50 +118,91 @@
 
 <script>
 import CourseService from "@/services/CourseService";
+import "./Courses.css";
 
 export default {
   name: "CoursesPage",
   data() {
     return {
       courses: [],
+      allCourses: [],
       searchKeyword: "",
+      selectedLevels: [],
+      selectedRating: 0,
+      userVotes: {},
     };
   },
-  async created() {
+  async mounted() {
+    this.loadUserVotes();
     await this.loadCourses();
   },
+  activated() {
+    // Nếu dùng <keep-alive>, sẽ gọi khi quay lại trang này
+    this.loadUserVotes();
+    this.applyFilter();
+  },
   methods: {
+    loadUserVotes() {
+      const votes = {};
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith("course_votes_")) {
+          const courseId = key.replace("course_votes_", "");
+          votes[courseId] = Number(localStorage.getItem(key));
+        }
+      });
+      this.userVotes = votes;
+    },
     async loadCourses() {
       try {
         const data = await CourseService.getCourses();
-        this.courses = data.map((item) => ({
-          id: item.id || item.examId, // đảm bảo có id
-          image: "/assets/courses1.jpg",
-          title: item.name || item.title || "No title",
-          author: item.author || "Unknown",
-          rating: item.rating || 5,
-        }));
+        this.courses = data;
+        this.allCourses = data;
+        this.loadUserVotes(); // Đảm bảo votes luôn mới nhất
+        this.applyFilter();
       } catch (err) {
         this.courses = [];
+        this.allCourses = [];
       }
     },
     async handleSearch() {
       if (!this.searchKeyword) {
         await this.loadCourses();
+        this.applyFilter();
         return;
       }
       try {
         const data = await CourseService.searchCourses(this.searchKeyword);
-        this.courses = data.map((item) => ({
-          id: item.id || item.examId, // đảm bảo có id
-          image: "/assets/courses1.jpg",
-          title: item.name || item.title || "No title",
-          author: item.author || "Unknown",
-          rating: item.rating || 5,
-        }));
+        this.courses = data;
+        this.allCourses = data;
+        this.loadUserVotes();
+        this.applyFilter();
       } catch (err) {
         this.courses = [];
+        this.allCourses = [];
       }
+    },
+    applyFilter() {
+      let filtered = this.allCourses;
+      if (this.selectedLevels.length > 0) {
+        filtered = filtered.filter(c =>
+          this.selectedLevels.includes((c.level || "").toUpperCase())
+        );
+      }
+      if (this.selectedRating > 0) {
+        filtered = filtered.filter(c => {
+          const userVote = this.userVotes[c.id];
+          const avg = userVote
+            ? (c.ratings * c.votes + userVote) / (c.votes + 1)
+            : c.ratings;
+          return Math.round(avg) >= this.selectedRating;
+        });
+      }
+      this.courses = filtered;
+    },
+    resetFilter() {
+      this.selectedLevels = [];
+      this.selectedRating = 0;
+      this.courses = this.allCourses;
     },
     goToCourseDetail(id) {
       if (id) {
@@ -136,282 +212,3 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-.courses-hero-bg {
-  min-height: 100vh;
-  background: linear-gradient(120deg, #5e97bb 100%, #232526 40%);
-  display: flex;
-  flex-direction: column;
-}
-
-.courses-header-section {
-  position: relative;
-  width: 100vw;
-  min-height: 320px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.courses-header-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100%;
-  background: rgba(30, 60, 100, 0.55);
-  z-index: 1;
-}
-
-.courses-header-content {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  color: #fff;
-  width: 100%;
-  padding: 3rem 0 2rem 0;
-}
-
-.courses-header-content h1 {
-  font-size: 2.8rem;
-  font-weight: bold;
-  margin-bottom: 1.5rem;
-  letter-spacing: 1px;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.search-bar-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.search-bar {
-  width: 50%;
-  padding: 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 1.1rem;
-  box-sizing: border-box;
-  background: #f8fafd;
-  transition: box-shadow 0.2s;
-}
-
-.search-bar:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px #00bcd4;
-}
-
-.search-button {
-  padding: 0.75rem 1.2rem;
-  background-color: #00bcd4;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: background 0.2s;
-}
-
-.search-button:hover {
-  background-color: #0097a7;
-}
-
-.main-content {
-  display: flex;
-  gap: 2rem;
-  padding: 2.5rem 5vw 2rem 5vw;
-  flex: 1 0 auto;
-}
-
-.filter-section {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.95);
-  padding: 2rem 1.5rem;
-  border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(30, 60, 100, 0.08);
-  min-width: 220px;
-  max-width: 260px;
-  margin-top: 1rem;
-  animation: fadeInLeft 0.7s;
-}
-
-.filter-section h3 {
-  margin-bottom: 1rem;
-  color: #00bcd4;
-  font-weight: bold;
-}
-
-.btn-filter,
-.btn-reset {
-  padding: 0.5rem 1.2rem;
-  border: none;
-  border-radius: 4px;
-  background-color: #00bcd4;
-  color: white;
-  cursor: pointer;
-  margin-top: 1rem;
-  margin-right: 0.5rem;
-  font-weight: 600;
-  transition: background 0.2s;
-}
-
-.btn-reset {
-  background: #e0e0e0;
-  color: #222;
-}
-
-.btn-filter:hover {
-  background: #0097a7;
-}
-.btn-reset:hover {
-  background: #bdbdbd;
-}
-
-.ratings-list,
-.levels-list {
-  list-style: none;
-  padding: 0;
-}
-
-.ratings-list li,
-.levels-list li {
-  margin-bottom: 0.5rem;
-  color: #333;
-}
-
-.results-section {
-  flex: 3;
-  animation: fadeInUp 0.7s;
-}
-
-.sort-section {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1.5rem;
-}
-
-.sort-button {
-  padding: 0.5rem 1.2rem;
-  border: 1px solid #00bcd4;
-  border-radius: 4px;
-  background-color: #fff;
-  cursor: pointer;
-  color: #00bcd4;
-  font-weight: 600;
-  transition: background 0.2s, color 0.2s;
-}
-
-.sort-button:hover {
-  background-color: #00bcd4;
-  color: #fff;
-}
-
-.results-title {
-  margin-bottom: 1.5rem;
-  color: #222;
-  font-weight: bold;
-  font-size: 1.3rem;
-}
-
-.course-card {
-  display: flex;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-  padding: 1.5rem;
-  border: none;
-  border-radius: 16px;
-  background: linear-gradient(120deg, #e3f2fd 0%, #f8fafd 100%);
-  box-shadow: 0 4px 24px rgba(30, 60, 100, 0.08);
-  align-items: center;
-  transition: transform 0.2s, box-shadow 0.2s;
-  animation: fadeInUp 0.7s;
-}
-
-.course-card:hover {
-  transform: translateY(-6px) scale(1.03);
-  box-shadow: 0 8px 32px rgba(30, 60, 100, 0.18);
-}
-
-.course-card img {
-  width: 170px;
-  height: 110px;
-  border-radius: 8px;
-  object-fit: cover;
-  box-shadow: 0 2px 8px rgba(30, 60, 100, 0.08);
-}
-
-.course-info h4 {
-  margin: 0;
-  font-size: 1.3rem;
-  color: #222;
-  font-weight: bold;
-}
-
-.course-info p {
-  margin: 0.5rem 0;
-  color: #666;
-}
-
-.rating {
-  color: #ffc107;
-}
-
-.star {
-  font-size: 1.1rem;
-  transition: color 0.2s;
-}
-
-.star.filled {
-  color: #ffc107;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition: opacity 0.5s, transform 0.5s;
-}
-.fade-slide-enter-from,
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translateY(40px);
-}
-
-.card-fade-enter-active,
-.card-fade-leave-active {
-  transition: opacity 0.5s, transform 0.5s;
-}
-.card-fade-enter-from,
-.card-fade-leave-to {
-  opacity: 0;
-  transform: translateY(40px);
-}
-</style>

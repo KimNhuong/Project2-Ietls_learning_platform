@@ -7,6 +7,9 @@ import LoginPage from "@/views/LoginModule/LoginPage.vue";
 import RegistrationPage from "@/views/LoginModule/RegistrationPage.vue";
 import ProfilePage from "@/views/UserModule/ProfilePage.vue";
 import CourseDetail from "@/views/CourseModule/CourseDetail.vue"; // sửa lại đường dẫn
+import Test from "@/views/TestModule/Test.vue";
+import TestAttempt from "@/views/TestModule/TestAttempt.vue";
+import ChatDeepSeek from "@/views/TestModule/ChatDeepSeek.vue";
 
 const routes = [
   { path: "/", component: HomePage },
@@ -21,6 +24,23 @@ const routes = [
     name: "CourseDetail",
     component: CourseDetail,
     props: true,
+  },
+  {
+    path: "/Test/:lessonId",
+    name: "TestPage",
+    component: Test,
+    props: true,
+  },
+  {
+    path: "/test-attempt/:testId",
+    name: "TestAttempt",
+    component: TestAttempt,
+    props: true,
+  },
+  {
+    path: "/deepseek-chat",
+    name: "ChatDeepSeek",
+    component: ChatDeepSeek,
   },
 ];
 

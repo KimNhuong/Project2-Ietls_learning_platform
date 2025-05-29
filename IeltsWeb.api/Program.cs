@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using IeltsWeb.api.Interfaces;
+using IeltsWeb.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,15 +20,6 @@ builder.Services.AddDbContext<MyDbContext>(options =>
     )
 );
 
-// Register services
-builder.Services.AddScoped<IUserService, UserService>();
-// Comment hoặc xóa các dòng sau nếu chưa có các service này
-// builder.Services.AddScoped<IExamService, ExamService>();
-// builder.Services.AddScoped<IProgressTrackingService, ProgressTrackingService>();
-// Nếu có QuestionServiced<IProgressTrackingService, ProgressTrackingService>();
-// builder.Services.AddScoped<IQuestionService, QuestionService>();
-// builder.Services.AddScoped<IQuestionService, QuestionService>();
-// Thêm authentication (demo, dùng JWT hoặc cookie nếu cần)
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -54,12 +46,25 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend",
         policy =>
         {
-            policy.WithOrigins("http://localhost:8080")
+            policy.WithOrigins("http://localhost:8080","http://192.168.96.58:8080/")
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
 });
 builder.Services.AddSingleton<DeepSeekService>();
+builder.Services.AddScoped<ILessonService, LessonService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAnswerService, AnswerService>();
+builder.Services.AddScoped<IDeepSeekRequestService, DeepSeekRequestService>();
+// builder.Services.AddScoped<IExamService, ExamService>();
+// builder.Services.AddScoped<IProgressTrackingService, ProgressTrackingService>();
+builder.Services.AddScoped<IQuestionService, QuestionService>();
+builder.Services.AddScoped<IUserService, UserService>();
+// builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<ITestService, TestService>();
+builder.Services.AddScoped<IUserAnswerService, UserAnswerService>();
+
 
 var app = builder.Build();
 

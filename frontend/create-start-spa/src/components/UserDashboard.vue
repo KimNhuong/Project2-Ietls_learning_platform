@@ -24,6 +24,7 @@ export default {
   props: {
     username: { type: String, default: "User" },
     active: { type: String, default: "profile" },
+    roleId: { type: Number, default: 1 }, // Thêm prop roleId
   },
   data() {
     return {
@@ -37,8 +38,17 @@ export default {
         { key: "my-courses", label: "My Courses", icon: "fas fa-book" },
         { key: "progress", label: "Progress", icon: "fas fa-chart-line" },
         { key: "logout", label: "Logout", icon: "fas fa-sign-out-alt" },
-      ],
-    };
+      ]
+    }
+  },
+  mounted() {
+    if (this.roleId === 2) {
+      // Thêm menu cho admin
+      this.menu.splice(4, 0,
+        { key: "create-course", label: "Tạo khóa học", icon: "fas fa-plus-circle" },
+        { key: "edit-course", label: "Chỉnh sửa khóa học", icon: "fas fa-edit" }
+      );
+    }
   },
 };
 </script>

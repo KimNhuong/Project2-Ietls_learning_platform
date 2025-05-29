@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using IeltsWeb.api.models;
 
-namespace IeltsWeb.api.Models;
+namespace IeltsWeb.api.models;
 
 public class Role
 {

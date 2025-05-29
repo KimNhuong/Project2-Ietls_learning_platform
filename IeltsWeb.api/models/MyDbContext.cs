@@ -1,4 +1,4 @@
-using IeltsWeb.api.Models;
+using IeltsWeb.api.models;
 using Microsoft.EntityFrameworkCore;
 
 namespace IeltsWeb.api.models
@@ -20,6 +20,7 @@ namespace IeltsWeb.api.models
         public DbSet<TestAttempt> TestAttempts { get; set; }
         public DbSet<UserBookmark> UserBookmarks { get; set; }
         public DbSet<Role> Roles { get; set; }
+        public DbSet<DeepSeekRequest> DeepSeekRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -18,14 +18,52 @@ public class UsersController : ControllerBase
   }
 
   [HttpGet]
-  public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+  public async Task<ActionResult<IEnumerable<object>>> GetUsers()
   {
     var users = await _userService.GetAllUsersAsync();
-    return Ok(users);
+    var result = users.Select(user =>
+    {
+      if (user.RoleId == 2)
+      {
+        return (object)new
+        {
+          user.UserId,
+          user.Username,
+          user.Email,
+          user.RoleId,
+          // ...other user fields...
+          coursesCreated = user.CoursesCreated
+        };
+      }
+      else if (user.RoleId == 1)
+      {
+        return (object)new
+        {
+          user.UserId,
+          user.Username,
+          user.Email,
+          user.RoleId,
+          // ...other user fields...
+          userProgresses = user.UserProgresses
+        };
+      }
+      else
+      {
+        return (object)new
+        {
+          user.UserId,
+          user.Username,
+          user.Email,
+          user.RoleId
+          // ...other user fields...
+        };
+      }
+    });
+    return Ok(result);
   }
 
   [HttpGet("{id}")]
-  public async Task<ActionResult<User>> GetUser(int id)
+  public async Task<ActionResult<object>> GetUser(int id)
   {
     var user = await _userService.GetUserByIdAsync(id);
 
@@ -34,7 +72,41 @@ public class UsersController : ControllerBase
       return NotFound();
     }
 
-    return Ok(user);
+    if (user.RoleId == 2)
+    {
+      return Ok(new
+      {
+        user.UserId,
+        user.Username,
+        user.Email,
+        user.RoleId,
+        // ...other user fields...
+        coursesCreated = user.CoursesCreated
+      });
+    }
+    else if (user.RoleId == 1)
+    {
+      return Ok(new
+      {
+        user.UserId,
+        user.Username,
+        user.Email,
+        user.RoleId,
+        // ...other user fields...
+        userProgresses = user.UserProgresses
+      });
+    }
+    else
+    {
+      return Ok(new
+      {
+        user.UserId,
+        user.Username,
+        user.Email,
+        user.RoleId
+        // ...other user fields...
+      });
+    }
   }
 
   [HttpPost]

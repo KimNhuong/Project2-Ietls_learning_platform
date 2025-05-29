@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using IeltsWeb.api.Services;
 using System.Threading.Tasks;
+using IeltsWeb.api.models; // Thêm using cho MyDbContext
+using IeltsWeb.api.DTOs;
 
 namespace IeltsWeb.api.Controllers;
 
@@ -9,8 +11,10 @@ namespace IeltsWeb.api.Controllers;
 public class CoursesController : ControllerBase
 {
     private readonly DeepSeekService _deepSeekService;
-    public CoursesController(DeepSeekService deepSeekService)
+    private readonly MyDbContext _context;
+    public CoursesController(MyDbContext context, DeepSeekService deepSeekService)
     {
+        _context = context;
         _deepSeekService = deepSeekService;
     }
 
@@ -18,48 +22,64 @@ public class CoursesController : ControllerBase
     [HttpGet]
     public IActionResult GetCourses()
     {
-        // TODO: Lấy danh sách khóa học từ DB
-        return Ok(new[] { new { CourseId = 1, Name = "Demo Course" } });
+        var courses = _context.Courses.ToList();
+        return Ok(courses);
     }
 
     // GET: /api/courses/{id}
     [HttpGet("{id}")]
     public IActionResult GetCourseDetail(int id)
     {
-        // TODO: Lấy chi tiết 1 khóa học từ DB
-        return Ok(new { CourseId = id, Name = "Demo Course", Description = "Demo" });
+        var course = _context.Courses.Find(id);
+        if (course == null) return NotFound();
+        return Ok(course);
     }
 
-    // GET: /api/courses/{courseId}/lessons
-    [HttpGet("{courseId}/lessons")]
-    public IActionResult GetLessons(int courseId)
+    // POST: /api/courses
+    [HttpPost]
+    public IActionResult CreateCourse([FromBody] CourseCreateDto dto)
     {
-        // TODO: Lấy danh sách bài học trong khóa học
-        return Ok(new[] { new { LessonId = 1, CourseId = courseId, Title = "Lesson 1" } });
+        var newCourse = new Course
+        {
+            Title = dto.Title ?? string.Empty,
+            Description = dto.Description ?? string.Empty,
+            CreatedAt = dto.CreatedAt,
+            CreatedBy = dto.CreatedBy,
+            Rating = (int)dto.Rating,
+            Level = dto.Level ?? string.Empty,
+            ImageUrl = dto.ImageUrl ?? string.Empty
+        };
+        _context.Courses.Add(newCourse);
+        _context.SaveChanges();
+        return CreatedAtAction(nameof(GetCourseDetail), new { id = newCourse.Id }, newCourse);
     }
 
-    // GET: /api/lessons/{lessonId}
-    [HttpGet("/api/lessons/{lessonId}")]
-    public IActionResult GetLessonDetail(int lessonId)
+    // PUT: /api/courses/{id}
+    [HttpPut("{id}")]
+    public IActionResult UpdateCourse(int id, [FromBody] CourseUpdateDto dto)
     {
-        // TODO: Lấy chi tiết bài học
-        return Ok(new { LessonId = lessonId, Title = "Lesson 1", Content = "Demo content" });
+        var existing = _context.Courses.Find(id);
+        if (existing == null) return NotFound();
+        existing.Title = dto.Title;
+        existing.Description = dto.Description;
+        existing.CreatedAt = dto.CreatedAt;
+        existing.CreatedBy = dto.CreatedBy;
+        existing.Rating = dto.Rating;
+        existing.Level = dto.Level;
+        existing.ImageUrl = dto.ImageUrl;
+        _context.SaveChanges();
+        return NoContent();
     }
 
-    // GET: /api/lessons/{lessonId}/questions
-    [HttpGet("/api/lessons/{lessonId}/questions")]
-    public IActionResult GetQuestions(int lessonId)
+    // DELETE: /api/courses/{id}
+    [HttpDelete("{id}")]
+    public IActionResult DeleteCourse(int id)
     {
-        // TODO: Lấy danh sách câu hỏi trắc nghiệm của bài học
-        return Ok(new[] { new { QuestionId = 1, LessonId = lessonId, Content = "What is ...?" } });
-    }
-
-    // GET: /api/questions/{questionId}
-    [HttpGet("/api/questions/{questionId}")]
-    public IActionResult GetQuestionDetail(int questionId)
-    {
-        // TODO: Lấy chi tiết câu hỏi trắc nghiệm
-        return Ok(new { QuestionId = questionId, Content = "What is ...?", Options = new[] { "A", "B", "C" } });
+        var course = _context.Courses.Find(id);
+        if (course == null) return NotFound();
+        _context.Courses.Remove(course);
+        _context.SaveChanges();
+        return NoContent();
     }
 
     // Ví dụ endpoint sử dụng DeepSeek AI
@@ -81,5 +101,13 @@ public class CoursesController : ControllerBase
             // Log the exception if needed
             return StatusCode(500, $"Internal server error: {ex.Message}");
         }
+    }
+
+    // GET: /api/courses/search?title=abc
+    [HttpGet("search")]
+    public IActionResult GetCoursesByTitle([FromQuery] string title)
+    {
+        var courses = _context.Courses.Where(c => c.Title != null && c.Title.Contains(title)).ToList();
+        return Ok(courses);
     }
 }

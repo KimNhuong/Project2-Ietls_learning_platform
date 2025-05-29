@@ -10,6 +10,9 @@ export default {
       password: password,
     };
     const res = await axios.post(API_URL_LOGIN, payload);
+    // Lưu cả token và userId vào localStorage
+    localStorage.setItem("token", res.data.token);
+    localStorage.setItem("userId", res.data.userId);
     return res.data.token;
   },
 

@@ -54,7 +54,8 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Invalid username or password" });
 
         var token = GenerateJwtToken(user);
-        return Ok(new { token });
+        // Trả về cả userId trong response
+        return Ok(new { token, userId = user.UserId });
     }
 
     // POST: /api/auth/forgot-password

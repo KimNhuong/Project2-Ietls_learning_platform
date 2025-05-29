@@ -4,6 +4,7 @@
       <UserDashboard
         :username="user.username"
         :active="activeTab"
+        :roleId="user.roleId"
         @select="handleSelect"
       />
       <div class="user-content-panel">
@@ -68,8 +69,8 @@ export default {
         // Xóa các trường không cần thiết
         delete userData.role;
         delete userData.passwordHash;
-        delete userData.roleId;
-        // Giữ lại userId, username, email, createdAt
+        // KHÔNG xóa userData.roleId ở đây nữa!
+        // Giữ lại userId, username, email, createdAt, roleId
         this.user = userData;
       } catch (err) {
         alert("Không thể lấy thông tin người dùng.");

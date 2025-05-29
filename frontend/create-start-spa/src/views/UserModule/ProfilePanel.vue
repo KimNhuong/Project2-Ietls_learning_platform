@@ -22,8 +22,8 @@
 </template>
 
 <script>
+import axios from "axios";
 export default {
-  props: ["user"],
   data() {
     return {
       form: {
@@ -33,19 +33,24 @@ export default {
       },
     };
   },
-  watch: {
-    user: {
-      immediate: true,
-      handler(val) {
-        if (val) {
-          this.form = {
-            username: val.username || "",
-            email: val.email || "",
-            createdAt: val.createdAt || "",
-          };
-        }
-      },
-    },
+  async mounted() {
+    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("userId");
+    if (!token || !userId) return;
+    try {
+      const res = await axios.get(
+        `http://localhost:5067/api/Users/${userId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const user = res.data;
+      this.form = {
+        username: user.username || "",
+        email: user.email || "",
+        createdAt: user.createdAt || "",
+      };
+    } catch (err) {
+      // Xử lý lỗi nếu cần
+    }
   },
   methods: {
     // Không cho phép cập nhật thông tin vì backend không hỗ trợ

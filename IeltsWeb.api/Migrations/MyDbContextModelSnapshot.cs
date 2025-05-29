@@ -22,24 +22,6 @@ namespace IeltsWeb.api.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
-            modelBuilder.Entity("IeltsWeb.api.Models.Role", b =>
-                {
-                    b.Property<int>("RoleId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("RoleId"));
-
-                    b.Property<string>("RoleName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.HasKey("RoleId");
-
-                    b.ToTable("Roles");
-                });
-
             modelBuilder.Entity("IeltsWeb.api.models.Answer", b =>
                 {
                     b.Property<int>("Id")
@@ -54,8 +36,8 @@ namespace IeltsWeb.api.Migrations
                     b.Property<string>("Explanation")
                         .HasColumnType("longtext");
 
-                    b.Property<bool>("IsCorrect")
-                        .HasColumnType("tinyint(1)");
+                    b.Property<string>("IsCorrect")
+                        .HasColumnType("longtext");
 
                     b.Property<int>("QuestionId")
                         .HasColumnType("int");
@@ -81,21 +63,62 @@ namespace IeltsWeb.api.Migrations
                     b.Property<int>("CreatedBy")
                         .HasColumnType("int");
 
-                    b.Property<int>("CreatorUserId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
 
                     b.Property<string>("Title")
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatorUserId");
+                    b.HasIndex("CreatedBy");
 
                     b.ToTable("Courses");
+                });
+
+            modelBuilder.Entity("IeltsWeb.api.models.DeepSeekRequest", b =>
+                {
+                    b.Property<int>("RequestId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("RequestId"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Response")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Skill")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("RequestId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("DeepSeekRequests");
                 });
 
             modelBuilder.Entity("IeltsWeb.api.models.Lesson", b =>
@@ -213,6 +236,24 @@ namespace IeltsWeb.api.Migrations
                     b.HasIndex("MediaId");
 
                     b.ToTable("QuestionMedias");
+                });
+
+            modelBuilder.Entity("IeltsWeb.api.models.Role", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("RoleId"));
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.HasKey("RoleId");
+
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("IeltsWeb.api.models.Test", b =>
@@ -443,11 +484,22 @@ namespace IeltsWeb.api.Migrations
                 {
                     b.HasOne("IeltsWeb.api.models.User", "Creator")
                         .WithMany("CoursesCreated")
-                        .HasForeignKey("CreatorUserId")
+                        .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Creator");
+                });
+
+            modelBuilder.Entity("IeltsWeb.api.models.DeepSeekRequest", b =>
+                {
+                    b.HasOne("IeltsWeb.api.models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("IeltsWeb.api.models.Lesson", b =>
@@ -534,7 +586,7 @@ namespace IeltsWeb.api.Migrations
 
             modelBuilder.Entity("IeltsWeb.api.models.User", b =>
                 {
-                    b.HasOne("IeltsWeb.api.Models.Role", "Role")
+                    b.HasOne("IeltsWeb.api.models.Role", "Role")
                         .WithMany("Users")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -618,11 +670,6 @@ namespace IeltsWeb.api.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("IeltsWeb.api.Models.Role", b =>
-                {
-                    b.Navigation("Users");
-                });
-
             modelBuilder.Entity("IeltsWeb.api.models.Answer", b =>
                 {
                     b.Navigation("UserAnswers");
@@ -658,6 +705,11 @@ namespace IeltsWeb.api.Migrations
                     b.Navigation("UserAnswers");
 
                     b.Navigation("UserBookmarks");
+                });
+
+            modelBuilder.Entity("IeltsWeb.api.models.Role", b =>
+                {
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("IeltsWeb.api.models.Test", b =>
