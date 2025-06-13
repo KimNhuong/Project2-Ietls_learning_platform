@@ -64,6 +64,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 // builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<ITestService, TestService>();
 builder.Services.AddScoped<IUserAnswerService, UserAnswerService>();
+builder.Services.AddScoped<IQuestionMediaService, QuestionMediaService>();
 
 
 var app = builder.Build();
