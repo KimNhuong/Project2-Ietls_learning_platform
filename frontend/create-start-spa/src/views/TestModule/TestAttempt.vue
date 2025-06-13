@@ -7,13 +7,13 @@
           <span class="q-order">Câu {{ idx + 1 }}.</span>
           <span v-html="q.content"></span>
         </div>
-        <div v-if="q.questionType === 'writting'">
+        <template v-if="q.questionType === 'writting'">
           <div class="writing-block">
             <textarea v-model="answers[q.id]" rows="5" placeholder="Viết đoạn văn trả lời..." class="answer-input"></textarea>
             <button type="button" class="btn-save" @click="saveWritingAnswer(q.id)">Lưu câu trả lời</button>
           </div>
-        </div>
-        <div v-else-if="q.questionType === 'multiplechoice'">
+        </template>
+        <template v-else-if="q.questionType === 'multiplechoice'">
           <div v-for="opt in getOptions(q)" :key="opt" class="mc-option">
             <input
               type="radio"
@@ -24,12 +24,15 @@
             />
             <label :for="'q_' + q.id + '_' + opt">{{ opt }}</label>
           </div>
-        </div>
-        <div v-else-if="q.questionType === 'fillinblank'">
-          <input v-model="answers[q.id]" class="answer-input" placeholder="Điền đáp án..." />
-        </div>
-        <div v-else-if="q.questionType === 'truefalse'">
-          <div class="mc-option">
+        </template>
+        <template v-else-if="q.questionType === 'fillinblank' || q.questionType === 'truefalse'">
+          <MediaBlock
+            v-if="shouldRenderMedia(q, idx)"
+            :questionId="q.id"
+            :mediaId="getMediaIdForQuestion(q.id)"
+          />
+          <input v-model="answers[q.id]" class="answer-input" placeholder="Điền đáp án..." v-if="q.questionType === 'fillinblank'" />
+          <div class="mc-option" v-else>
             <input type="radio" :name="'q_' + q.id" value="T" v-model="answers[q.id]" :id="'q_' + q.id + '_T'" />
             <label :for="'q_' + q.id + '_T'">True</label>
             <input type="radio" :name="'q_' + q.id" value="F" v-model="answers[q.id]" :id="'q_' + q.id + '_F'" />
@@ -37,7 +40,7 @@
             <input type="radio" :name="'q_' + q.id" value="NG" v-model="answers[q.id]" :id="'q_' + q.id + '_NG'" />
             <label :for="'q_' + q.id + '_NG'">Not Given</label>
           </div>
-        </div>
+        </template>
       </div>
       <button class="btn-submit" type="submit">Nộp bài</button>
     </form>
@@ -49,14 +52,18 @@
 
 <script>
 import testService from "@/services/testService";
+import MediaBlock from "./MediaBlock.vue";
 
 export default {
   name: "TestAttempt",
   props: ["testId"],
+  components: { MediaBlock },
   data() {
     return {
       questions: [],
       answers: {},
+      questionMediaMap: {}, // { questionId: mediaId }
+      renderedMediaIds: new Set(),
     };
   },
   async mounted() {
@@ -76,6 +83,20 @@ export default {
     }
     // Nếu user đã có userId, không cần gọi lại nữa
     this.questions = await testService.getQuestionsByTest(this.testId || this.$route.params.testId);
+    // Lấy mediaId cho từng câu hỏi (nếu có)
+    for (const q of this.questions) {
+      if (q.questionType === 'fillinblank' || q.questionType === 'truefalse') {
+        try {
+          const res = await fetch(`http://localhost:5067/api/QuestionMedias/by-question/${q.id}`);
+          const arr = await res.json();
+          if (arr && arr.length > 0) {
+            this.questionMediaMap[q.id] = arr[0].mediaId;
+          }
+        } catch (e) {
+          // Không làm gì nếu lỗi, chỉ bỏ qua
+        }
+      }
+    }
   },
   methods: {
     getOptions(q) {
@@ -111,6 +132,19 @@ export default {
     submit() {
       // Sau khi nộp bài, chuyển hướng sang trang chat DeepSeek
       this.$router.push({ name: "ChatDeepSeek" });
+    },
+    getMediaIdForQuestion(questionId) {
+      return this.questionMediaMap[questionId] || null;
+    },
+    shouldRenderMedia(q, idx) {
+      const mediaId = this.getMediaIdForQuestion(q.id);
+      if (!mediaId) return false;
+      // Kiểm tra nếu mediaId này đã render ở câu trước chưa
+      for (let i = 0; i < idx; i++) {
+        const prevQ = this.questions[i];
+        if (this.getMediaIdForQuestion(prevQ.id) === mediaId) return false;
+      }
+      return true;
     },
   },
 };

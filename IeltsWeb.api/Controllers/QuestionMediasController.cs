@@ -40,4 +40,13 @@ public class QuestionMediasController : ControllerBase
         await _service.DeleteAsync(questionId, mediaId);
         return NoContent();
     }
+
+    [HttpGet("by-question/{questionId}")]
+    public async Task<ActionResult<IEnumerable<QuestionMediaDto>>> GetByQuestionId(int questionId)
+    {
+        var items = await _service.GetAllAsync();
+        var result = items.Where(x => x.QuestionId == questionId)
+            .Select(x => new QuestionMediaDto { QuestionId = x.QuestionId, MediaId = x.MediaId });
+        return Ok(result);
+    }
 }

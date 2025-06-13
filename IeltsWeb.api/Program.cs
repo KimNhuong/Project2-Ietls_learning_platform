@@ -65,6 +65,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITestService, TestService>();
 builder.Services.AddScoped<IUserAnswerService, UserAnswerService>();
 builder.Services.AddScoped<IQuestionMediaService, QuestionMediaService>();
+builder.Services.AddScoped<IMediaService, MediaService>();
 
 
 var app = builder.Build();
@@ -78,7 +79,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowFrontend"); // Đảm bảo dòng này nằm TRƯỚC UseAuthentication và UseAuthorization
+app.UseCors(policy => policy
+    .AllowAnyOrigin()
+    .AllowAnyHeader()
+    .AllowAnyMethod()
+);
 app.UseAuthentication();
 app.UseAuthorization();
 // app.UseMiddleware<IeltsWeb.api.Middlewares.ProgressTrackingMiddleware>();
