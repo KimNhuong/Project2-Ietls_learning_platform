@@ -2,45 +2,46 @@
   <div class="attempt-wrapper" v-if="questions.length">
     <h2>Làm bài Test</h2>
     <form @submit.prevent="submit">
-      <div v-for="(q, idx) in questions" :key="q.id" class="question-block">
-        <div class="question-content">
-          <span class="q-order">Câu {{ idx + 1 }}.</span>
-          <span v-html="q.content"></span>
+      <div v-for="(q, idx) in questions" :key="q.id" :class="['question-block', { 'has-video': isVideo(q) }]">
+        <div v-if="isVideo(q)" class="media-left">
+          <MediaBlock :mediaId="getMediaIdForQuestion(q.id)" />
         </div>
-        <template v-if="q.questionType === 'writting'">
-          <div class="writing-block">
-            <textarea v-model="answers[q.id]" rows="5" placeholder="Viết đoạn văn trả lời..." class="answer-input"></textarea>
-            <button type="button" class="btn-save" @click="saveWritingAnswer(q.id)">Lưu câu trả lời</button>
+        <div class="question-main">
+          <div class="question-content">
+            <span class="q-order">Câu {{ idx + 1 }}.</span>
+            <span v-html="q.content"></span>
+            <MediaBlock v-if="isPicture(q)" :mediaId="getMediaIdForQuestion(q.id)" />
           </div>
-        </template>
-        <template v-else-if="q.questionType === 'multiplechoice'">
-          <div v-for="opt in getOptions(q)" :key="opt" class="mc-option">
-            <input
-              type="radio"
-              :name="'q_' + q.id"
-              :value="opt"
-              v-model="answers[q.id]"
-              :id="'q_' + q.id + '_' + opt"
-            />
-            <label :for="'q_' + q.id + '_' + opt">{{ opt }}</label>
-          </div>
-        </template>
-        <template v-else-if="q.questionType === 'fillinblank' || q.questionType === 'truefalse'">
-          <MediaBlock
-            v-if="shouldRenderMedia(q, idx)"
-            :questionId="q.id"
-            :mediaId="getMediaIdForQuestion(q.id)"
-          />
-          <input v-model="answers[q.id]" class="answer-input" placeholder="Điền đáp án..." v-if="q.questionType === 'fillinblank'" />
-          <div class="mc-option" v-else>
-            <input type="radio" :name="'q_' + q.id" value="T" v-model="answers[q.id]" :id="'q_' + q.id + '_T'" />
-            <label :for="'q_' + q.id + '_T'">True</label>
-            <input type="radio" :name="'q_' + q.id" value="F" v-model="answers[q.id]" :id="'q_' + q.id + '_F'" />
-            <label :for="'q_' + q.id + '_F'">False</label>
-            <input type="radio" :name="'q_' + q.id" value="NG" v-model="answers[q.id]" :id="'q_' + q.id + '_NG'" />
-            <label :for="'q_' + q.id + '_NG'">Not Given</label>
-          </div>
-        </template>
+          <template v-if="q.questionType === 'writting'">
+            <div class="writing-block">
+              <textarea v-model="answers[q.id]" rows="5" placeholder="Viết đoạn văn trả lời..." class="answer-input"></textarea>
+              <button type="button" class="btn-save" @click="saveWritingAnswer(q.id)">Lưu câu trả lời</button>
+            </div>
+          </template>
+          <template v-else-if="q.questionType === 'multiplechoice'">
+            <div v-for="opt in getOptions(q)" :key="opt" class="mc-option">
+              <input
+                type="radio"
+                :name="'q_' + q.id"
+                :value="opt"
+                v-model="answers[q.id]"
+                :id="'q_' + q.id + '_' + opt"
+              />
+              <label :for="'q_' + q.id + '_' + opt">{{ opt }}</label>
+            </div>
+          </template>
+          <template v-else-if="q.questionType === 'fillinblank' || q.questionType === 'truefalse'">
+            <input v-model="answers[q.id]" class="answer-input" placeholder="Điền đáp án..." v-if="q.questionType === 'fillinblank'" />
+            <div class="mc-option" v-else>
+              <input type="radio" :name="'q_' + q.id" value="T" v-model="answers[q.id]" :id="'q_' + q.id + '_T'" />
+              <label :for="'q_' + q.id + '_T'">True</label>
+              <input type="radio" :name="'q_' + q.id" value="F" v-model="answers[q.id]" :id="'q_' + q.id + '_F'" />
+              <label :for="'q_' + q.id + '_F'">False</label>
+              <input type="radio" :name="'q_' + q.id" value="NG" v-model="answers[q.id]" :id="'q_' + q.id + '_NG'" />
+              <label :for="'q_' + q.id + '_NG'">Not Given</label>
+            </div>
+          </template>
+        </div>
       </div>
       <button class="btn-submit" type="submit">Nộp bài</button>
     </form>
@@ -63,6 +64,7 @@ export default {
       questions: [],
       answers: {},
       questionMediaMap: {}, // { questionId: mediaId }
+      mediaMap: {}, // { mediaId: mediaObj }
       renderedMediaIds: new Set(),
     };
   },
@@ -83,14 +85,20 @@ export default {
     }
     // Nếu user đã có userId, không cần gọi lại nữa
     this.questions = await testService.getQuestionsByTest(this.testId || this.$route.params.testId);
-    // Lấy mediaId cho từng câu hỏi (nếu có)
+    // Lấy mediaId và media info cho từng câu hỏi (nếu có)
     for (const q of this.questions) {
-      if (q.questionType === 'fillinblank' || q.questionType === 'truefalse') {
+      if (q.questionType === 'fillinblank' || q.questionType === 'truefalse' || q.questionType === 'multiplechoice' || q.questionType === 'writting') {
         try {
           const res = await fetch(`http://localhost:5067/api/QuestionMedias/by-question/${q.id}`);
           const arr = await res.json();
           if (arr && arr.length > 0) {
-            this.questionMediaMap[q.id] = arr[0].mediaId;
+            const mediaId = arr[0].mediaId;
+            this.questionMediaMap[q.id] = mediaId;
+            if (!this.mediaMap[mediaId]) {
+              // fetch media info nếu chưa có
+              const mediaRes = await fetch(`http://localhost:5067/api/media/${mediaId}`);
+              this.mediaMap[mediaId] = await mediaRes.json();
+            }
           }
         } catch (e) {
           // Không làm gì nếu lỗi, chỉ bỏ qua
@@ -129,12 +137,51 @@ export default {
       const user = JSON.parse(localStorage.getItem("userID") || "null");
       return user?.userId || 0;
     },
-    submit() {
-      // Sau khi nộp bài, chuyển hướng sang trang chat DeepSeek
-      this.$router.push({ name: "ChatDeepSeek" });
+    submit: async function() {
+      // Lưu tất cả câu trả lời vào /api/UserAnswers
+      for (const q of this.questions) {
+        let answerId = 0;
+        if (q.questionType === 'multiplechoice' || q.questionType === 'fillinblank' || q.questionType === 'truefalse') {
+          // Truy vấn đáp án đúng cho câu hỏi này
+          try {
+            const res = await fetch(`http://localhost:5067/api/Answers/question/${q.id}`);
+            const arr = await res.json();
+            if (arr && arr.length > 0) {
+              // Nếu là multiplechoice thì tìm đáp án có content trùng với answers[q.id]
+              const userAns = this.answers[q.id];
+              const found = arr.find(a => a.Content === userAns);
+              if (found) answerId = found.Id;
+            }
+          } catch (e) { /* ignore */ }
+        }
+        // Gửi lên API UserAnswers
+        await fetch('http://localhost:5067/api/UserAnswers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+          body: JSON.stringify({
+            userId: this.getUserId(),
+            questionId: q.id,
+            answerId: answerId,
+            textAnswer: this.answers[q.id] || '',
+            isMarked: false
+          })
+        });
+      }
+      // Chuyển hướng sang trang AfterTest
+      this.$router.push({ name: "AfterTest" });
     },
     getMediaIdForQuestion(questionId) {
       return this.questionMediaMap[questionId] || null;
+    },
+    isVideo(q) {
+      const mediaId = this.getMediaIdForQuestion(q.id);
+      const media = this.mediaMap?.[mediaId];
+      return media && media.type === 'video';
+    },
+    isPicture(q) {
+      const mediaId = this.getMediaIdForQuestion(q.id);
+      const media = this.mediaMap?.[mediaId];
+      return media && media.type === 'picture';
     },
     shouldRenderMedia(q, idx) {
       const mediaId = this.getMediaIdForQuestion(q.id);
@@ -152,7 +199,8 @@ export default {
 
 <style scoped>
 .attempt-wrapper {
-  max-width: 900px;
+  max-width: 1400px;
+  width: 95vw;
   margin: 2rem auto;
   background: #fff;
   border-radius: 18px;
@@ -163,6 +211,18 @@ export default {
   margin-bottom: 2rem;
   padding-bottom: 1.2rem;
   border-bottom: 1px solid #e0e0e0;
+}
+.question-block.has-video {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+.media-left {
+  flex: 0 0 400px;
+  max-width: 400px;
+}
+.question-main {
+  flex: 1;
 }
 .question-content {
   font-weight: 500;

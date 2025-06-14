@@ -94,4 +94,20 @@ public class AnswersController : ControllerBase
         await _service.DeleteAsync(id);
         return NoContent();
     }
+
+    [HttpGet("question/{questionId}")]
+    public async Task<ActionResult<IEnumerable<AnswerDto>>> GetByQuestionId(int questionId)
+    {
+        var answers = (await _service.GetAllAsync())
+            .Where(a => a.QuestionId == questionId)
+            .Select(a => new AnswerDto
+            {
+                Id = a.Id,
+                QuestionId = a.QuestionId,
+                Content = a.Content,
+                IsCorrect = a.IsCorrect,
+                Explanation = a.Explanation
+            });
+        return Ok(answers);
+    }
 }

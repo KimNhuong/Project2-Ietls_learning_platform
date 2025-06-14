@@ -69,7 +69,12 @@ export default {
   },
   methods: {
     goToAttempt(testId) {
-      this.$router.push({ name: "TestAttempt", params: { testId: String(testId) } });
+      const test = this.tests.find(t => t.id === testId);
+      if (test && test.skill && test.skill.toLowerCase() === 'speaking') {
+        this.$router.push({ name: "SpeakingTest", params: { testId: String(testId) } });
+      } else {
+        this.$router.push({ name: "TestAttempt", params: { testId: String(testId) } });
+      }
     },
   },
 };

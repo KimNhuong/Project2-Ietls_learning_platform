@@ -10,6 +10,8 @@ import CourseDetail from "@/views/CourseModule/CourseDetail.vue"; // sửa lại
 import Test from "@/views/TestModule/Test.vue";
 import TestAttempt from "@/views/TestModule/TestAttempt.vue";
 import ChatDeepSeek from "@/views/TestModule/ChatDeepSeek.vue";
+import AfterTest from "@/views/TestModule/AfterTest.vue";
+import SpeakingTest from "@/views/TestModule/SpeakingTest.vue";
 
 const routes = [
   { path: "/", component: HomePage },
@@ -41,6 +43,22 @@ const routes = [
     path: "/deepseek-chat",
     name: "ChatDeepSeek",
     component: ChatDeepSeek,
+  },
+  {
+    path: "/after-test",
+    name: "AfterTest",
+    component: AfterTest,
+  },
+  {
+    path: "/speaking-test",
+    name: "SpeakingTest",
+    component: SpeakingTest,
+  },
+  {
+    path: "/speaking-test/:testId",
+    name: "SpeakingTest",
+    component: SpeakingTest,
+    props: true,
   },
 ];
 
