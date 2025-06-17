@@ -12,6 +12,7 @@ import TestAttempt from "@/views/TestModule/TestAttempt.vue";
 import ChatDeepSeek from "@/views/TestModule/ChatDeepSeek.vue";
 import AfterTest from "@/views/TestModule/AfterTest.vue";
 import SpeakingTest from "@/views/TestModule/SpeakingTest.vue";
+import ScorePage from "@/views/TestModule/ScorePage.vue";
 
 const routes = [
   { path: "/", component: HomePage },
@@ -59,6 +60,11 @@ const routes = [
     name: "SpeakingTest",
     component: SpeakingTest,
     props: true,
+  },
+  {
+    path: "/score",
+    name: "ScorePage",
+    component: ScorePage,
   },
 ];
 

@@ -113,12 +113,19 @@ export default {
     async saveWritingAnswer(questionId) {
       const userId = this.getUserId();
       try {
-        await testService.saveWritingAnswer({
-          userId,
-          questionId,
-          textAnswer: this.answers[questionId]
+        // Gửi nội dung writing lên API UserAnswers
+        await fetch('http://localhost:5067/api/UserAnswers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+          body: JSON.stringify({
+            userId: userId,
+            questionId: questionId,
+            answerId: 0, // answerId cho writing có thể là 0 hoặc null
+            textAnswer: this.answers[questionId] || '',
+            isMarked: false
+          })
         });
-        // Always show a small popup/toast on success
+        // Hiển thị thông báo thành công
         if (this.$toast && this.$toast.success) {
           this.$toast.success("Đã lưu câu trả lời!", { timeout: 1800, position: "top-right" });
         } else {
@@ -138,36 +145,40 @@ export default {
       return user?.userId || 0;
     },
     submit: async function() {
-      // Lưu tất cả câu trả lời vào /api/UserAnswers
+      // 1. Lưu đáp án từng câu hỏi vào localStorage
+      const userAnswers = [];
       for (const q of this.questions) {
-        let answerId = 0;
-        if (q.questionType === 'multiplechoice' || q.questionType === 'fillinblank' || q.questionType === 'truefalse') {
-          // Truy vấn đáp án đúng cho câu hỏi này
+        userAnswers.push({
+          questionId: q.id,
+          answer: this.answers[q.id] || '',
+          questionType: q.questionType
+        });
+      }
+      localStorage.setItem('userAnswers', JSON.stringify(userAnswers));
+
+      // 2. Chấm điểm cho các câu hỏi fillinblank, multiplechoice, truefalse
+      let score = 0;
+      let total = 0;
+      for (const q of this.questions) {
+        if (["fillinblank", "multiplechoice", "truefalse"].includes(q.questionType)) {
+          total++;
           try {
             const res = await fetch(`http://localhost:5067/api/Answers/question/${q.id}`);
             const arr = await res.json();
             if (arr && arr.length > 0) {
-              // Nếu là multiplechoice thì tìm đáp án có content trùng với answers[q.id]
-              const userAns = this.answers[q.id];
-              const found = arr.find(a => a.Content === userAns);
-              if (found) answerId = found.Id;
+              // So sánh đáp án người dùng với trường content (không phân biệt hoa thường, trim)
+              const userAns = (this.answers[q.id] || '').toString().trim().toLowerCase();
+              const correct = arr.find(a => (a.content || a.Content || '').toString().trim().toLowerCase() === userAns);
+              if (correct) score++;
             }
           } catch (e) { /* ignore */ }
         }
-        // Gửi lên API UserAnswers
-        await fetch('http://localhost:5067/api/UserAnswers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-          body: JSON.stringify({
-            userId: this.getUserId(),
-            questionId: q.id,
-            answerId: answerId,
-            textAnswer: this.answers[q.id] || '',
-            isMarked: false
-          })
-        });
       }
-      // Chuyển hướng sang trang AfterTest
+      // Lưu kết quả vào localStorage để trang AfterTest lấy hiển thị
+      localStorage.setItem('testResult', JSON.stringify({ score, total }));
+
+      // 3. Chuyển hướng: nếu còn test thì sang test tiếp theo, nếu hết thì sang AfterTest
+      // (Giả sử bạn có logic xác định test tiếp theo, ở đây chỉ chuyển sang AfterTest)
       this.$router.push({ name: "AfterTest" });
     },
     getMediaIdForQuestion(questionId) {
