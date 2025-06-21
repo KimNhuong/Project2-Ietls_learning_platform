@@ -68,11 +68,8 @@
             <a class="dropdown-item" href="#" @click.prevent="goToProfile"
               >Thông tin cá nhân</a
             >
-            <a class="dropdown-item" href="#" @click.prevent="goToMyCourses"
-              >Các khóa học đã mua</a
-            >
-            <a class="dropdown-item" href="#" @click.prevent="goToProgress"
-              >Tiến độ của tôi</a
+            <a class="dropdown-item" href="#" @click.prevent="goToAddCourse"
+              >Thêm khóa học</a
             >
             <a
               class="dropdown-item"
@@ -116,6 +113,9 @@ export default {
     },
     goToChangePassword() {
       this.$router.push("/change-password");
+    },
+    goToAddCourse() {
+      this.$router.push("/add-course");
     },
     logout() {
       localStorage.removeItem("token");

@@ -21,6 +21,7 @@
             <span v-if="!isSpeechRecognizing(q.id)">🗣️ Nhận diện giọng nói</span>
             <span v-else>🛑 Dừng nhận diện</span>
           </button>
+          <button type="button" class="btn-save" @click="saveSpeakingAnswer(q.id)">Lưu câu trả lời</button>
           <audio v-if="recordings[q.id]" :src="recordings[q.id]" controls class="audio-preview"></audio>
         </div>
       </div>
@@ -86,23 +87,21 @@ export default {
       }
     },
     async submit() {
-      // Lưu textAnswer và audio (nếu có) cho từng câu hỏi
+      // Lưu đáp án speaking vào localStorage (không gửi API)
+      const userAnswers = JSON.parse(localStorage.getItem('userAnswers') || '[]');
       for (const q of this.questions) {
-        const formData = new FormData();
-        formData.append('userId', this.getUserId());
-        formData.append('questionId', q.id);
-        formData.append('textAnswer', this.answers[q.id] || '');
         if (this.recordings[q.id]) {
-          const response = await fetch(this.recordings[q.id]);
-          const blob = await response.blob();
-          formData.append('audioAnswer', blob, `speaking-q${q.id}.webm`);
+          // Xoá đáp án speaking cũ nếu có
+          const idx = userAnswers.findIndex(a => a.questionId === q.id && a.questionType === 'speaking');
+          if (idx !== -1) userAnswers.splice(idx, 1);
+          userAnswers.push({
+            questionId: q.id,
+            answer: this.recordings[q.id],
+            questionType: 'speaking'
+          });
         }
-        await fetch('http://localhost:5067/api/UserAnswers/speaking', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-          body: formData
-        });
       }
+      localStorage.setItem('userAnswers', JSON.stringify(userAnswers));
       this.$router.push({ name: "AfterTest" });
     },
     getUserId() {
@@ -174,6 +173,28 @@ export default {
         }
       };
       recognition.start();
+    },
+    async saveSpeakingAnswer(questionId) {
+      // Lưu đáp án speaking (text) vào localStorage
+      const userAnswers = JSON.parse(localStorage.getItem('userAnswers') || '[]');
+      // Xoá đáp án speaking cũ nếu có
+      const idx = userAnswers.findIndex(a => a.questionId === questionId && a.questionType === 'speaking');
+      if (idx !== -1) userAnswers.splice(idx, 1);
+      const text = this.answers[questionId] || '';
+      if (text.trim()) {
+        userAnswers.push({
+          questionId: questionId,
+          answer: text,
+          questionType: 'speaking'
+        });
+      }
+      localStorage.setItem('userAnswers', JSON.stringify(userAnswers));
+      console.log('Saved userAnswers:', userAnswers);
+      if (this.$toast && this.$toast.success) {
+        this.$toast.success("Đã lưu câu trả lời!", { timeout: 1800, position: "top-right" });
+      } else {
+        window.alert("Đã lưu câu trả lời!");
+      }
     },
   },
 };
@@ -247,6 +268,21 @@ export default {
 }
 .btn-speech:hover {
   background: #43a047;
+}
+.btn-save {
+  background: #2196f3;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background 0.2s;
+}
+.btn-save:hover {
+  background: #1976d2;
 }
 .audio-preview {
   margin-top: 0.5rem;

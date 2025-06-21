@@ -13,6 +13,7 @@ import ChatDeepSeek from "@/views/TestModule/ChatDeepSeek.vue";
 import AfterTest from "@/views/TestModule/AfterTest.vue";
 import SpeakingTest from "@/views/TestModule/SpeakingTest.vue";
 import ScorePage from "@/views/TestModule/ScorePage.vue";
+import AddCourses from "@/views/UserModule/AddCourses.vue";
 
 const routes = [
   { path: "/", component: HomePage },
@@ -65,6 +66,11 @@ const routes = [
     path: "/score",
     name: "ScorePage",
     component: ScorePage,
+  },
+  {
+    path: "/add-course",
+    name: "AddCourse",
+    component: AddCourses,
   },
 ];
 

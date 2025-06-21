@@ -1,6 +1,9 @@
 <template>
   <div class="attempt-wrapper" v-if="questions.length">
     <h2>Làm bài Test</h2>
+    <div class="timer-bar">
+      <span>Thời gian còn lại: {{ Math.floor(timeLeft/60) }}:{{ (timeLeft%60).toString().padStart(2,'0') }}</span>
+    </div>
     <form @submit.prevent="submit">
       <div v-for="(q, idx) in questions" :key="q.id" :class="['question-block', { 'has-video': isVideo(q) }]">
         <div v-if="isVideo(q)" class="media-left">
@@ -66,6 +69,8 @@ export default {
       questionMediaMap: {}, // { questionId: mediaId }
       mediaMap: {}, // { mediaId: mediaObj }
       renderedMediaIds: new Set(),
+      timeLeft: 30 * 60, // 30 phút (giây)
+      timer: null,
     };
   },
   async mounted() {
@@ -105,38 +110,33 @@ export default {
         }
       }
     }
+    this.startTimer();
+  },
+  beforeUnmount() {
+    if (this.timer) clearInterval(this.timer);
   },
   methods: {
     getOptions(q) {
       return q.options || ["A", "B", "C", "D"];
     },
     async saveWritingAnswer(questionId) {
-      const userId = this.getUserId();
-      try {
-        // Gửi nội dung writing lên API UserAnswers
-        await fetch('http://localhost:5067/api/UserAnswers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-          body: JSON.stringify({
-            userId: userId,
-            questionId: questionId,
-            answerId: 0, // answerId cho writing có thể là 0 hoặc null
-            textAnswer: this.answers[questionId] || '',
-            isMarked: false
-          })
+      // Lưu đáp án writing vào localStorage (không gửi API)
+      const userAnswers = JSON.parse(localStorage.getItem('userAnswers') || '[]');
+      const idx = userAnswers.findIndex(a => a.questionId === questionId);
+      if (idx !== -1) {
+        userAnswers[idx].answer = this.answers[questionId] || '';
+      } else {
+        userAnswers.push({
+          questionId: questionId,
+          answer: this.answers[questionId] || '',
+          questionType: 'writting'
         });
-        // Hiển thị thông báo thành công
-        if (this.$toast && this.$toast.success) {
-          this.$toast.success("Đã lưu câu trả lời!", { timeout: 1800, position: "top-right" });
-        } else {
-          window.alert("Đã lưu câu trả lời!");
-        }
-      } catch (e) {
-        if (this.$toast && this.$toast.error) {
-          this.$toast.error("Lưu thất bại!");
-        } else {
-          window.alert("Lưu thất bại!");
-        }
+      }
+      localStorage.setItem('userAnswers', JSON.stringify(userAnswers));
+      if (this.$toast && this.$toast.success) {
+        this.$toast.success("Đã lưu câu trả lời!", { timeout: 1800, position: "top-right" });
+      } else {
+        window.alert("Đã lưu câu trả lời!");
       }
     },
     getUserId() {
@@ -147,14 +147,26 @@ export default {
     submit: async function() {
       // 1. Lưu đáp án từng câu hỏi vào localStorage
       const userAnswers = [];
+      let hasWriting = false;
       for (const q of this.questions) {
         userAnswers.push({
           questionId: q.id,
           answer: this.answers[q.id] || '',
           questionType: q.questionType
         });
+        if (q.questionType === 'writting') {
+          hasWriting = true;
+        }
       }
       localStorage.setItem('userAnswers', JSON.stringify(userAnswers));
+      console.log('Submit userAnswers:', userAnswers);
+      console.log('Has writing:', hasWriting);
+
+      if (hasWriting) {
+        console.log('Redirecting to AfterTest for AI feedback...');
+        this.$router.push({ name: "AfterTest" });
+        return;
+      }
 
       // 2. Chấm điểm cho các câu hỏi fillinblank, multiplechoice, truefalse
       let score = 0;
@@ -176,9 +188,8 @@ export default {
       }
       // Lưu kết quả vào localStorage để trang AfterTest lấy hiển thị
       localStorage.setItem('testResult', JSON.stringify({ score, total }));
-
-      // 3. Chuyển hướng: nếu còn test thì sang test tiếp theo, nếu hết thì sang AfterTest
-      // (Giả sử bạn có logic xác định test tiếp theo, ở đây chỉ chuyển sang AfterTest)
+      console.log('Chấm điểm xong, chuyển sang AfterTest');
+      // Chuyển hướng sang trang AfterTest (chỉ chấm điểm nếu không có writing)
       this.$router.push({ name: "AfterTest" });
     },
     getMediaIdForQuestion(questionId) {
@@ -204,6 +215,21 @@ export default {
       }
       return true;
     },
+    startTimer() {
+      this.timer = setInterval(() => {
+        if (this.timeLeft > 0) {
+          this.timeLeft--;
+        } else {
+          clearInterval(this.timer);
+          this.submit();
+        }
+      }, 1000);
+    },
+    formatTime(seconds) {
+      const minutes = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    },
   },
 };
 </script>
@@ -217,6 +243,17 @@ export default {
   border-radius: 18px;
   box-shadow: 0 4px 24px rgba(30, 60, 100, 0.08);
   padding: 2rem;
+}
+.timer-bar {
+  background: #e3f2fd;
+  color: #1565c0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  letter-spacing: 1px;
 }
 .question-block {
   margin-bottom: 2rem;
@@ -292,5 +329,11 @@ export default {
 }
 .btn-save:hover {
   background: #43a047;
+}
+.timer {
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin-top: 1rem;
+  text-align: center;
 }
 </style>

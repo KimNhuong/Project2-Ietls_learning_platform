@@ -9,6 +9,19 @@
     <div v-else>
       <p>Không tìm thấy kết quả. Vui lòng làm lại bài test.</p>
     </div>
+    <div v-if="manualScores && (manualScores.writing.length || manualScores.speaking.length)">
+      <h3>Điểm tự chấm (theo AI feedback)</h3>
+      <div v-if="manualScores.writing.length">
+        <p><b>Writing:</b> {{ manualScores.writing.join(', ') }} / 9</p>
+      </div>
+      <div v-if="manualScores.speaking.length">
+        <p><b>Speaking:</b> {{ manualScores.speaking.join(', ') }} / 9</p>
+      </div>
+    </div>
+    <div v-if="overallScore !== null">
+      <h3>Điểm tổng hợp (Overall) cho lesson</h3>
+      <p><b>{{ overallScore }}</b> / 9</p>
+    </div>
     <router-link to="/">Quay về trang chủ</router-link>
   </div>
 </template>
@@ -18,7 +31,8 @@ export default {
   name: "ScorePage",
   data() {
     return {
-      result: null
+      result: null,
+      manualScores: { writing: [], speaking: [] }
     };
   },
   computed: {
@@ -29,12 +43,36 @@ export default {
       let raw = percent * 9;
       // Làm tròn về .0 hoặc .5
       return Math.round(raw * 2) / 2;
+    },
+    overallScore() {
+      // Tính điểm overall cho lesson: trung bình cộng các điểm writing, speaking, và điểm test nếu có
+      let scores = [];
+      if (this.manualScores && this.manualScores.writing.length) {
+        scores = scores.concat(this.manualScores.writing);
+      }
+      if (this.manualScores && this.manualScores.speaking.length) {
+        scores = scores.concat(this.manualScores.speaking);
+      }
+      if (this.result && this.result.total) {
+        // Quy đổi điểm test sang thang 9
+        const percent = this.result.score / this.result.total;
+        let testScore = Math.round(percent * 9 * 2) / 2;
+        scores.push(testScore);
+      }
+      if (!scores.length) return null;
+      // Trung bình cộng, làm tròn về .0 hoặc .5
+      const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+      return Math.round(avg * 2) / 2;
     }
   },
   mounted() {
     const res = localStorage.getItem('testResult');
     if (res) {
       this.result = JSON.parse(res);
+    }
+    const ms = localStorage.getItem('manualScores');
+    if (ms) {
+      this.manualScores = JSON.parse(ms);
     }
   }
 };
